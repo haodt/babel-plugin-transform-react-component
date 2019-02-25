@@ -6,6 +6,10 @@
   "scripts": {
     "test": "mocha src/index.test.js"
   },
+  "engines": {
+    "node": ">=8",
+    "npm": ">=5"
+  },
   "devDependencies": {
     "@babel/core": "^7.3.3",
     "@babel/preset-env": "^7.3.1",

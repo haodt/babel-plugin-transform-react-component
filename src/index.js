@@ -46,7 +46,8 @@ module.exports = function({ types }) {
         const { node } = path;
         const [declaration] = node.declarations;
         const pureExpression = types.callExpression(
-          types.arrowFunctionExpression(
+          types.functionExpression(
+            null,
             [],
             types.blockStatement([
               types.functionDeclaration(

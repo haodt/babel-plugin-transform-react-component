@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const Team = (() => {
+const Team = function () {
   function Team(_ref) {
     var label = _ref.label;
     return React.createElement("h1", null, "Hello");
@@ -14,4 +14,4 @@ const Team = (() => {
     spoon: "hello"
   }
   return Team;
-})();
+}();
