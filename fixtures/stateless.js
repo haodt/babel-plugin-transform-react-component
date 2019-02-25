@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 const Team = ({ label }) => <h1>Hello</h1>;
 
 Team.propTypes = {
-  spoon: propTypes.string
+  spoon: PropTypes.string
 };
 
 Team.defaultProps = {
