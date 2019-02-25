@@ -1,13 +1,32 @@
-const seen = new WeakSet();
-
 module.exports = function({ types }) {
   let functions = {};
+  let namedfunctions = {};
+
   const isReact = node =>
     node.left.object &&
     node.left.property &&
     ["propTypes", "defaultProps"].includes(node.left.property.name);
 
   const moveToDeclaration = {
+    FunctionDeclaration(path) {
+      /**
+       * Check if path has been removed by previous lookup from variable vistor
+       */
+      if (path.node.id.name === this.name && !functions[this.name] && !this.path.removed) {
+        namedfunctions[this.name] = path;
+        if (!path.moveds) {
+          path.moveds = [];
+        }
+
+        /**
+         * Shift to post event to prevent modification on function
+         */
+        path.moveds.push(this.move);
+
+        this.path.remove();
+        return;
+      }
+    },
     VariableDeclaration(path) {
       const { node } = path;
       const [declaration] = node.declarations;
@@ -40,8 +59,40 @@ module.exports = function({ types }) {
   return {
     pre() {
       functions = {};
+      namedfunctions = {};
     },
     post() {
+      Object.values(namedfunctions).forEach(path => {
+        const { node } = path;
+        const pureExpression = types.callExpression(
+          types.functionExpression(
+            null,
+            [],
+            types.blockStatement([
+              types.functionDeclaration(
+                node.id,
+                node.params,
+                node.body,
+                node.generator,
+                node.async
+              ),
+              types.returnStatement(types.cloneNode(node.id))
+            ])
+          ),
+          []
+        );
+        path.moveds.forEach(move => {
+          const blocks = pureExpression.callee.body.body;
+          blocks.splice(blocks.length - 1, 0, move);
+        });
+
+        const classNode = types.variableDeclaration("var", [
+          types.variableDeclarator(types.cloneNode(node.id), pureExpression)
+        ]);
+
+        path.replaceWith(classNode);
+      });
+
       Object.values(functions).forEach(path => {
         const { node } = path;
         const [declaration] = node.declarations;
@@ -67,7 +118,7 @@ module.exports = function({ types }) {
           blocks.splice(blocks.length - 1, 0, move);
         });
 
-        const classNode = types.variableDeclaration("const", [
+        const classNode = types.variableDeclaration("var", [
           types.variableDeclarator(
             types.cloneNode(declaration.init.id),
             pureExpression
