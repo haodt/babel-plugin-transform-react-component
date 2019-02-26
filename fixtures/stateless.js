@@ -8,5 +8,5 @@ Team.propTypes = {
 };
 
 Team.defaultProps = {
-  spoon: "hello"
+  spoon: <label>test</label>
 };

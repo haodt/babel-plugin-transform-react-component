@@ -42,7 +42,7 @@ function (_React$Component) {
     spoon: PropTypes.string
   }
   Tea.defaultProps = {
-    spoon: "hello"
+    spoon: React.createElement("label", null, "test")
   }
   return Tea;
 }(React.Component);

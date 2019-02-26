@@ -29,9 +29,8 @@ describe("Transform React component", function() {
   });
 
   it("should return wrapped function for stateful component", function() {
-    const transformed = babel.transform(
-      fs.readFileSync(__dirname + "/../fixtures/stateful.js").toString(),
-      config
+    const transformed = babel.transformSync(
+      fs.readFileSync(__dirname + "/../fixtures/stateful.js").toString()
     );
     assert.strictEqual(
       transformed.code,

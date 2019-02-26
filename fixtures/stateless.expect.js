@@ -11,7 +11,7 @@ var Team = function () {
     spoon: PropTypes.string
   }
   Team.defaultProps = {
-    spoon: "hello"
+    spoon: React.createElement("label", null, "test")
   }
   return Team;
 }();

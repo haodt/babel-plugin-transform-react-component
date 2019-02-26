@@ -13,5 +13,5 @@ Tea.propTypes = {
 };
 
 Tea.defaultProps = {
-  spoon: "hello"
+  spoon: <label>test</label>
 };

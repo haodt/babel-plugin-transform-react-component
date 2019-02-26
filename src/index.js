@@ -1,6 +1,7 @@
 module.exports = function({ types }) {
   let functions = {};
   let namedfunctions = {};
+  let removeds = [];
 
   const isReact = node =>
     node.left.object &&
@@ -8,33 +9,36 @@ module.exports = function({ types }) {
     ["propTypes", "defaultProps"].includes(node.left.property.name);
 
   const moveToDeclaration = {
-    FunctionDeclaration(path) {
-      /**
-       * Check if path has been removed by previous lookup from variable vistor
-       */
-      if (path.node.id.name === this.name && !functions[this.name] && !this.path.removed) {
-        namedfunctions[this.name] = path;
-        if (!path.moveds) {
-          path.moveds = [];
-        }
+    // FunctionDeclaration(path) {
+    //   /**
+    //    * Check if path has been removed by previous lookup from variable vistor
+    //    */
+    //   if (path.node.id.name === this.name && !functions[this.name] && !this.path.removed) {
+    //     namedfunctions[this.name] = path;
+    //     if (!path.moveds) {
+    //       path.moveds = [];
+    //     }
 
-        /**
-         * Shift to post event to prevent modification on function
-         */
-        path.moveds.push(this.move);
-
-        this.path.remove();
-        return;
-      }
-    },
+    //     /**
+    //      * Shift to post event to prevent modification on function
+    //      */
+    //     path.moveds.push(this.move);
+    //     removeds.push(this.path);
+    //     return;
+    //   }
+    // },
     VariableDeclaration(path) {
       const { node } = path;
       const [declaration] = node.declarations;
       if (declaration && declaration.id.name === this.name) {
         if (types.isCallExpression(declaration.init)) {
-          const blocks = declaration.init.callee.body.body;
-          blocks.splice(blocks.length - 1, 0, this.move);
-          this.path.remove();
+          const blocks = path.get('declarations')[0].get('init').get('callee').get('body').get('body');
+          blocks.forEach(child => {
+            if (types.isReturnStatement(child)) {
+              child.insertBefore(this.move)
+            }
+          })
+          removeds.push(this.path);
           return;
         }
 
@@ -48,8 +52,7 @@ module.exports = function({ types }) {
            * Shift to post event to prevent modification on function
            */
           path.moveds.push(this.move);
-
-          this.path.remove();
+          removeds.push(this.path);
           return;
         }
       }
@@ -60,8 +63,10 @@ module.exports = function({ types }) {
     pre() {
       functions = {};
       namedfunctions = {};
+      removeds = [];
     },
     post() {
+      removeds.forEach(p => !p.removed && p.remove())
       Object.values(namedfunctions).forEach(path => {
         const { node } = path;
         const pureExpression = types.callExpression(
